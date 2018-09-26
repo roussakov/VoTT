@@ -235,11 +235,17 @@ function openPath(pathName, isDir) {
     assetFolder = path.join(path.dirname(pathName), `${path.basename(pathName, path.extname(pathName))}_output`);
     
     try {
+
+      var tagsPath = `${pathName}\\tags.json`;
       var config = require(`${pathName}.json`);
+      var tags = require(tagsPath);
+
+      config.inputTags = tags ? tags : config.inputTags.split(',');
+
       saveState = JSON.stringify(config);
       //restore config
       $('#inputtags').val(config.inputTags);
-      config.inputTags.split(",").forEach( tag => {
+      config.inputTags.forEach( tag => {
           $("#inputtags").tagsinput('add',tag);
       });
       if (config.framerate){
