@@ -225,12 +225,15 @@
         var left = (div.offsetLeft + parseFloat(height, 10) - parseFloat(width, 10));
         var top = (div.offsetTop - parseFloat(height, 10));
 
+        //here we assume that we have at most 1 tag
+        var tag = this.frames[this.getCurrentFrame()][div.id - 1].tags[0];
+
         if(parseFloat(top) < 0) {
             top = (div.offsetTop + parseFloat(div.style.height, 10));
         }
 
         var outputHTML = `<div style="width:auto;height:${height}px;left:${left}px;top:${top}px;" class="regionLabel" >
-          <span class="regionLabelSpan">extended ${div.id}</span>
+          <span class="regionLabelSpan">${tag ? tag : 'undefined'}</span>
           <span data-region-id="${div.id}" class="closeRegion clickableControl">X</span>
         </div>`;
 
@@ -343,11 +346,10 @@
             self.playback(e.detail.playbackValue, e.detail.playbackText);
           });
       this.addEventListener("ontagsubmitted", function(e) {
-              var arr = [];
-              arr.push(e.detail.tagid);
-              this.addTagsToRegion(arr);
+              var tag = e.detail.tagid;
+              this.addTagToRegion(tag);
               this.emitRegionToHost();//Persist
-              selected_region = this.selectedRegionId
+              selected_region = this.selectedRegionId;
               this.showAllRegions();
               this.regionSelected(selected_region)
           });
@@ -536,6 +538,11 @@
                region.tags.push(selectedTagsArray[i]);
           }
     },
+    addTagToRegion: function(tag) {
+        var regionId = this.selectedRegionId -1;
+        var region = this.frames[this.getCurrentFrame()][regionId];
+        region.tags = [tag];
+    },
     nextUntaggedClicked:function() {
         if (this.checkRegionLabels()){
           var frameIndex = this.getCurrentFrame();
@@ -709,9 +716,14 @@
             Polymer.dom(this.$.videoWrapper).appendChild(div);
 
             var label = this.createRegionLabel(div);
-            var $removeRegionBtn = $(label).find(".closeRegion");
+
+            $( label ).click(function(e) {
+                self.regionSelected(div.id);
+            });
+
+            $(label).find(".closeRegion").click(self.deleteRegion.bind(this));
+
             Polymer.dom(this.$.videoWrapper).appendChild(label);
-            this.listen($removeRegionBtn.get(0), "click", "deleteRegion");
     },
     /**
        * @method cleanSelectedElements
